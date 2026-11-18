@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { SCHOOL, CENTRO, NAV, NOSOTROS } from './data'
 import { useContent, parseDate, formatDate } from './lib/content'
 import { supabase, configured } from './lib/supabase'
-import { Analytics } from "@vercel/analytics/next"
 
 function Img({ src, className = '', alt }) {
   const [ok, setOk] = useState(true)
