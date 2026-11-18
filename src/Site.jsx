@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { SCHOOL, CENTRO, NAV, NOSOTROS } from './data'
 import { useContent, parseDate, formatDate } from './lib/content'
 import { supabase, configured } from './lib/supabase'
+import { Analytics } from "@vercel/analytics/next"
 
 function Img({ src, className = '', alt }) {
   const [ok, setOk] = useState(true)
@@ -318,6 +319,9 @@ function Footer() {
         Sitio del Centro de Alumnos · No es el sitio oficial del colegio ·{' '}
         <a href={SCHOOL.sitio} target="_blank" rel="noreferrer">cph-cja.com</a>
         {configured && <> · <Link to="/admin">Admin</Link></>}
+                <div>
+          <p>Raimundo Vicuña © 2026</p>
+        </div>
       </div>
     </footer>
   )
