@@ -1,14 +1,8 @@
-// ─────────────────────────────────────────────────────────────
-//  Todo el contenido editable de la página está en este archivo.
-//  Reemplaza los textos genéricos por los datos reales del centro.
-// ─────────────────────────────────────────────────────────────
 
 export const SCHOOL = {
   nombre: 'Colegio Padre Hurtado y Juanita de Los Andes',
   sigla: 'CPH CJA',
   sitio: 'https://www.cph-cja.com/',
-  // Logo tomado del sitio oficial. Si prefieres, descarga la imagen,
-  // ponla en /public y cambia esta ruta por '/escudo.png'.
   escudo:
     'https://static.wixstatic.com/media/61a2c1_27e0f01db31c4b79acd4e9daf83b9701~mv2.png',
   direccion: 'Av. Francisco Bulnes Correa 3000, Las Condes. Santiago. Chile',
@@ -18,8 +12,8 @@ export const CENTRO = {
   nombre: 'Centro de Alumnos',
   lema: 'Lema del Centro de Alumnos',
   bienvenida: 'Bienvenidos al Centro de Alumnos',
-  email: 'correo@centrodealumnos.cl', // reemplazar
-  instagram: '@usuario_instagram', // reemplazar
+  email: 'correo@centrodealumnos.cl',
+  instagram: '@usuario_instagram', 
 }
 
 export const NAV = [
