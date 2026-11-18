@@ -1,5 +1,3 @@
-// Configuración de las secciones editables del portal.
-// Cada una se muestra con el componente genérico <Crud />.
 
 const today = () => new Date().toISOString().slice(0, 10)
 

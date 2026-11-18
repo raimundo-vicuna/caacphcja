@@ -16,7 +16,6 @@ export const DEFAULT_SETTINGS = {
   color_gold: '#e0b84a',
 }
 
-// Datos de ejemplo (solo se usan si Supabase no está configurado)
 const FALLBACK = {
   news: NOTICIAS.map((n, i) => ({
     id: `n${i}`, title: n.titulo, summary: n.resumen, published_at: null, image_url: null,
@@ -63,7 +62,6 @@ export function ContentProvider({ children }) {
 
   useEffect(() => { reload() }, [reload])
 
-  // Aplica los colores configurados desde el portal
   useEffect(() => {
     const r = document.documentElement.style
     r.setProperty('--navy', settings.color_primary)
@@ -76,7 +74,6 @@ export function ContentProvider({ children }) {
 }
 
 const MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
-// Evita el corrimiento de zona horaria al leer 'YYYY-MM-DD'
 export function parseDate(str) {
   if (!str) return null
   const [y, m, d] = str.split('-').map(Number)

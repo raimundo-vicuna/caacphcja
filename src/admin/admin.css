@@ -1,4 +1,4 @@
-/* Portal admin: usa su propia paleta neutra, independiente del tema público */
+/* Portal admin */
 .adm, .adm-login, .adm-loading {
   --a-bg: #f4f6fa; --a-panel: #fff; --a-line: #dde3ee; --a-text: #1c2433; --a-muted: #667189;
   --a-brand: #14305e; --a-danger: #b3261e;

@@ -3,8 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Si faltan las claves, la página pública sigue funcionando con los
-// textos de ejemplo de src/data.js, pero el portal admin no estará disponible.
+
 export const configured = Boolean(url && key)
 export const supabase = configured ? createClient(url, key) : null
 

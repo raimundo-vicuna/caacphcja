@@ -1,6 +1,5 @@
 -- ============================================================
 --  Centro de Alumnos · esquema de base de datos para Supabase
---  Pégalo completo en Supabase → SQL Editor → Run
 -- ============================================================
 
 -- ── Administradores ─────────────────────────────────────────
