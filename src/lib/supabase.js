@@ -5,8 +5,13 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 
 export const configured = Boolean(url && key)
-export const supabase = configured ? createClient(url, key) : null
-
+export const supabase = configured
+  ? createClient(url, key, {
+      auth: {
+        flowType: 'pkce',
+      },
+    })
+  : null
 export async function uploadImage(file, folder = 'general') {
   if (!file.type.startsWith('image/')) throw new Error('El archivo debe ser una imagen.')
   if (file.size > 5 * 1024 * 1024) throw new Error('La imagen no puede pesar más de 5 MB.')
