@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const ALLOWED_KINDS = ['Sugerencia', 'Reclamo', 'Propuesta', 'Consulta']
+
 const esc = (value: string) =>
   value
     .replace(/&/g, '&amp;')
@@ -34,29 +36,52 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    const { data: recipients, error: recipientsError } = await adminClient
-      .from('notification_recipients')
-      .select('email')
-      .eq('active', true)
+    // Los destinatarios salen de la tabla real de administradores, no de una
+    // lista paralela de correos que alguien tenga que mantener manualmente.
+    const [{ data: adminRows, error: adminsError }, { data: preferenceRows, error: preferencesError }] = await Promise.all([
+      adminClient.from('admins').select('user_id'),
+      adminClient.from('admin_notification_preferences').select('user_id, enabled, kinds'),
+    ])
+    if (adminsError) throw adminsError
+    if (preferencesError) throw preferencesError
 
-    if (recipientsError) throw recipientsError
+    const preferences = new Map((preferenceRows || []).map((row) => [row.user_id, row]))
+    const adminIds = (adminRows || []).map((row) => row.user_id)
+    if (adminIds.length === 0) return new Response('No hay administradores.', { status: 200 })
 
-    const emails = [...new Set((recipients || [])
-      .map((item) => String(item.email || '').trim().toLowerCase())
-      .filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)))]
-
-    if (emails.length === 0) {
-      return new Response('No hay destinatarios activos.', { status: 200 })
+    const usersById = new Map<string, string>()
+    let page = 1
+    const perPage = 1000
+    while (true) {
+      const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage })
+      if (error) throw error
+      for (const user of data.users) {
+        if (adminIds.includes(user.id) && user.email) usersById.set(user.id, user.email.trim().toLowerCase())
+      }
+      if (data.users.length < perPage) break
+      page += 1
     }
 
     const record = payload.record || {}
-    const kind = esc(String(record.kind || 'Sugerencia'))
+    const kind = ALLOWED_KINDS.includes(record.kind) ? record.kind : 'Sugerencia'
+    const emails = [...new Set(adminIds.flatMap((id) => {
+      const email = usersById.get(id)
+      const preference = preferences.get(id)
+      const enabled = preference?.enabled ?? true
+      const kinds = preference?.kinds ?? ALLOWED_KINDS
+      return email && enabled && kinds.includes(kind) ? [email] : []
+    }))]
+
+    if (emails.length === 0) {
+      return new Response('Ningún administrador tiene activadas las notificaciones para este tipo.', { status: 200 })
+    }
+
+    const safeKind = esc(String(kind))
     const name = esc(String(record.name || 'Anónimo'))
     const course = record.course ? ` · ${esc(String(record.course))}` : ''
     const message = esc(String(record.message || ''))
-    const subject = `Nueva ${String(record.kind || 'sugerencia').toLowerCase()} en el buzón del Centro de Alumnos`
+    const subject = `Nueva ${kind.toLowerCase()} en el buzón del Centro de Alumnos`
 
-    // Enviar un correo por destinatario para no revelar las direcciones entre sí.
     const results = await Promise.all(emails.map(async (email) => {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -69,7 +94,7 @@ Deno.serve(async (req) => {
           to: [email],
           subject,
           html: `
-            <p><strong>Tipo:</strong> ${kind}</p>
+            <p><strong>Tipo:</strong> ${safeKind}</p>
             <p><strong>De:</strong> ${name}${course}</p>
             <p style="white-space:pre-wrap">${message}</p>
             <hr>
@@ -82,8 +107,8 @@ Deno.serve(async (req) => {
 
     const failed = results.filter((result) => !result.ok)
     if (failed.length) {
-      console.error('Falló el envío a uno o más destinatarios:', failed.map((item) => item.email))
-      return new Response('No se pudo enviar a todos los destinatarios.', { status: 502 })
+      console.error('Falló el envío a uno o más administradores:', failed.map((item) => item.email))
+      return new Response('No se pudo enviar a todos los administradores seleccionados.', { status: 502 })
     }
 
     return new Response(`Avisos enviados: ${results.length}`, { status: 200 })
