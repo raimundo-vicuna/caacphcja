@@ -10,6 +10,16 @@ create table if not exists public.admins (
   created_at timestamptz not null default now()
 );
 
+-- Compatibilidad: si se creó public.admin_users siguiendo una versión anterior
+-- de las instrucciones, copia sus usuarios a la tabla admins que usa este proyecto.
+do $$ begin
+  if to_regclass('public.admin_users') is not null then
+    insert into public.admins (user_id, created_at)
+    select user_id, created_at from public.admin_users
+    on conflict (user_id) do nothing;
+  end if;
+end $$;
+
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -87,6 +97,14 @@ create table if not exists public.suggestions (
 );
 create index if not exists suggestions_created_idx on public.suggestions (created_at desc);
 
+-- ── Destinatarios de avisos por correo ──────────────────────
+create table if not exists public.notification_recipients (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
 -- ── Seguridad por filas (RLS) ───────────────────────────────
 alter table public.admins        enable row level security;
 alter table public.site_settings enable row level security;
@@ -95,6 +113,7 @@ alter table public.events        enable row level security;
 alter table public.proposals     enable row level security;
 alter table public.board_members enable row level security;
 alter table public.suggestions   enable row level security;
+alter table public.notification_recipients enable row level security;
 
 -- admins: cada usuario solo puede ver su propia fila
 drop policy if exists "admins ver propia" on public.admins;
@@ -139,6 +158,12 @@ create policy "suggestions enviar" on public.suggestions
   with check (read = false and archived = false);
 drop policy if exists "suggestions admin" on public.suggestions;
 create policy "suggestions admin" on public.suggestions
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+
+-- Destinatarios: solo administradores pueden verlos y modificarlos
+drop policy if exists "notification recipients admin" on public.notification_recipients;
+create policy "notification recipients admin" on public.notification_recipients
   for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- Actualización en vivo de la bandeja de sugerencias

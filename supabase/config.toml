@@ -1,0 +1,5 @@
+[functions.manage-admins]
+verify_jwt = true
+
+[functions.notify-suggestion]
+verify_jwt = false

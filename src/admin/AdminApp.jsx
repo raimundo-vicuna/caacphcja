@@ -4,6 +4,8 @@ import { supabase, configured } from "../lib/supabase";
 import Suggestions from "./Suggestions";
 import Crud from "./Crud";
 import Settings from "./Settings";
+import Admins from "./Admins";
+import SetPassword from "./SetPassword";
 import { SECTIONS } from "./sections";
 
 function Login() {
@@ -66,6 +68,7 @@ function Panel({ session }) {
   const links = [
     { to: "/admin/sugerencias", label: "Sugerencias" },
     ...SECTIONS.map((s) => ({ to: `/admin/${s.path}`, label: s.title })),
+    { to: "/admin/administradores", label: "Administradores" },
     { to: "/admin/ajustes", label: "Ajustes de la página" },
   ];
   return (
@@ -115,6 +118,8 @@ function Panel({ session }) {
               element={<Crud key={s.path} {...s} />}
             />
           ))}
+          <Route path="administradores" element={<Admins />} />
+          <Route path="establecer-clave" element={<SetPassword />} />
           <Route path="ajustes" element={<Settings />} />
           <Route path="*" element={<Navigate to="/admin/sugerencias" replace />} />
         </Routes>
@@ -135,16 +140,26 @@ export default function AdminApp() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
     if (!session) {
       setIsAdmin(null);
       return;
     }
+
+    setIsAdmin(null);
     supabase
       .from("admins")
       .select("user_id")
       .eq("user_id", session.user.id)
       .maybeSingle()
-      .then(({ data }) => setIsAdmin(Boolean(data)));
+      .then(({ data, error }) => {
+        if (active) setIsAdmin(!error && Boolean(data));
+      });
+
+    return () => {
+      active = false;
+    };
   }, [session]);
 
   if (!configured) {
