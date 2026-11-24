@@ -103,3 +103,7 @@
   .adm-sug__row { grid-template-columns: auto 1fr; }
   .adm-sug__preview { grid-column: 1 / -1; }
 }
+
+/* Preferencias personales de notificaciones */
+.adm-form .adm-check { display: flex; flex-direction: row; align-items: center; gap: 10px; }
+.adm-form .adm-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--a-brand); }
