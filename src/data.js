@@ -17,11 +17,11 @@ export const CENTRO = {
 }
 
 export const NAV = [
-  { id: 'inicio', label: 'INICIO' },
-  { id: 'nosotros', label: 'NOSOTROS' },
-  { id: 'noticias', label: 'NOTICIAS Y EVENTOS' },
-  { id: 'propuestas', label: 'PROPUESTAS Y PROYECTOS' },
-  { id: 'contacto', label: 'CONTACTO' },
+  { id: 'inicio', label: 'Inicio' },
+  { id: 'nosotros', label: 'Nosotros' },
+  { id: 'noticias', label: 'Noticias y eventos' },
+  { id: 'propuestas', label: 'Propuestas' },
+  { id: 'contacto', label: 'Contacto' },
 ]
 
 export const NOSOTROS = {

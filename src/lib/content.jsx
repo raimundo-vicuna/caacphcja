@@ -12,7 +12,7 @@ export const DEFAULT_SETTINGS = {
   vision: NOSOTROS.vision,
   logo_url: '',
   color_primary: '#14305e',
-  color_accent: '#c8102e',
+  color_accent: '#963234',
   color_gold: '#e0b84a',
 }
 

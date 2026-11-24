@@ -10,6 +10,37 @@ function Img({ src, className = '', alt }) {
   return <img className={className} src={src} alt={alt} onError={() => setOk(false)} />
 }
 
+const LOGO_FALLBACK = '/logo.jpg'
+
+/* Cordillera: motivo del escudo. Se usa como marca de título y como imagen de relleno. */
+function Peak({ className = '' }) {
+  return (
+    <svg className={`peak ${className}`} viewBox="0 0 40 14" aria-hidden="true">
+      <path d="M1 13 L12 3 L18 9 L27 1 L39 13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Title({ children, sub = false, id }) {
+  return (
+    <h2 id={id} className={`title ${sub ? 'title--sub' : ''}`}>
+      <Peak />
+      {children}
+    </h2>
+  )
+}
+
+function Ridge() {
+  return (
+    <svg className="ridge" viewBox="0 0 1440 220" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+      <path className="ridge__far" d="M0 150 L120 118 L210 138 L340 66 L430 110 L520 82 L640 132 L760 58 L850 98 L960 122 L1080 50 L1170 96 L1290 74 L1440 120 L1440 220 L0 220Z" />
+      <path className="ridge__line" pathLength="1" d="M0 150 L120 118 L210 138 L340 66 L430 110 L520 82 L640 132 L760 58 L850 98 L960 122 L1080 50 L1170 96 L1290 74 L1440 120" />
+      <path className="ridge__mid" d="M0 182 L150 150 L260 170 L420 128 L560 166 L700 140 L880 176 L1040 138 L1200 172 L1340 146 L1440 164 L1440 220 L0 220Z" />
+      <path className="ridge__near" d="M0 204 L200 182 L340 196 L520 170 L700 194 L900 176 L1100 198 L1280 178 L1440 192 L1440 220 L0 220Z" />
+    </svg>
+  )
+}
+
 function Header() {
   const [open, setOpen] = useState(false)
   const { settings } = useContent()
@@ -17,13 +48,12 @@ function Header() {
     <header className="header">
       <div className="topbar">
         <a href={SCHOOL.sitio} target="_blank" rel="noreferrer">
-          Ir al sitio oficial del colegio ↗
+          Ir al sitio oficial del colegio
         </a>
       </div>
       <div className="header__inner">
         <a href="#/" onClick={() => window.scrollTo({ top: 0 })} className="brand">
-          <Img className="brand__logo" src={settings.logo_url} alt={`Logo ${CENTRO.nombre}`} />
-          <Img className="brand__logo" src={SCHOOL.escudo} alt={`Escudo ${SCHOOL.sigla}`} />
+          <Img className="brand__logo" src={settings.logo_url || LOGO_FALLBACK} alt={`Logo ${CENTRO.nombre}`} />
           <span className="brand__text">
             <strong>{CENTRO.nombre}</strong>
             <small>{SCHOOL.sigla}</small>
@@ -59,24 +89,26 @@ function Header() {
 
 function Hero() {
   const { settings } = useContent()
+  const go = (id) => (e) => {
+    e.preventDefault()
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
   return (
     <section id="inicio" className="hero">
-      <div className="hero__overlay" />
-      <div className="hero__content">
-        <Img className="hero__logo" src={settings.logo_url || SCHOOL.escudo} alt="Logo" />
-        <h1>{settings.bienvenida}</h1>
-        <p className="hero__lema">“{settings.lema}”</p>
-        <a
-          className="btn"
-          href="#/"
-          onClick={(e) => {
-            e.preventDefault()
-            document.getElementById('noticias')?.scrollIntoView({ behavior: 'smooth' })
-          }}
-        >
-          VER NOTICIAS
-        </a>
+      <div className="container hero__inner">
+        <div className="hero__text">
+          <h1>{settings.bienvenida}</h1>
+          <p className="hero__lema">{settings.lema}</p>
+          <div className="hero__actions">
+            <a className="btn" href="#/" onClick={go('noticias')}>Ver noticias</a>
+            <a className="btn btn--ghost" href="#/" onClick={go('contacto')}>Escríbenos</a>
+          </div>
+        </div>
+        <div className="hero__crest">
+          <Img src={settings.logo_url || LOGO_FALLBACK} alt={`Logo ${CENTRO.nombre}`} />
+        </div>
       </div>
+      <Ridge />
     </section>
   )
 }
@@ -90,24 +122,28 @@ function Nosotros() {
   return (
     <section id="nosotros" className="section">
       <div className="container">
-        <h2 className="title">{NOSOTROS.titulo}</h2>
-        <p className="lead">{settings.nosotros_texto}</p>
-        <div className="grid grid--2">
-          <article className="card card--accent">
-            <h3>Misión</h3>
-            <p>{settings.mision}</p>
-          </article>
-          <article className="card card--accent">
-            <h3>Visión</h3>
-            <p>{settings.vision}</p>
-          </article>
+        <div className="about">
+          <div>
+            <Title>{NOSOTROS.titulo}</Title>
+            <p className="lead">{settings.nosotros_texto}</p>
+          </div>
+          <div className="about__pillars">
+            <article>
+              <h3>Misión</h3>
+              <p>{settings.mision}</p>
+            </article>
+            <article>
+              <h3>Visión</h3>
+              <p>{settings.vision}</p>
+            </article>
+          </div>
         </div>
 
-        <h2 className="title title--sub">Directiva</h2>
+        <Title sub>Directiva</Title>
         {board.length === 0 ? (
           <Empty>Pronto publicaremos a la directiva.</Empty>
         ) : (
-          <div className="grid grid--3">
+          <div className="board">
             {board.map((d) => (
               <article key={d.id} className="person">
                 <div className="person__photo">
@@ -131,73 +167,103 @@ function Nosotros() {
   )
 }
 
+function NewsImage({ n }) {
+  if (n.image_url) return <img className="news__img" src={n.image_url} alt={n.title} />
+  return (
+    <div className="news__img news__img--empty" aria-hidden="true">
+      <svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice">
+        <path d="M0 190 L70 130 L120 165 L200 70 L260 135 L320 100 L400 170 L400 250 L0 250Z" />
+        <path className="near" d="M0 225 L90 190 L170 215 L260 180 L340 210 L400 195 L400 250 L0 250Z" />
+      </svg>
+    </div>
+  )
+}
+
+function NewsMeta({ n }) {
+  return <time>{n.published_at ? formatDate(n.published_at) : n.dateLabel}</time>
+}
+
 function Noticias() {
   const { news, events } = useContent()
+  const [lead, ...rest] = news
   return (
     <section id="noticias" className="section section--alt">
       <div className="container">
-        <h2 className="title">NOTICIAS</h2>
+        <Title>Noticias</Title>
         {news.length === 0 ? (
           <Empty>Aún no hay noticias publicadas.</Empty>
         ) : (
-          <div className="grid grid--3">
-            {news.map((n) => (
-              <article key={n.id} className="news">
-                {n.image_url ? (
-                  <img className="news__img" src={n.image_url} alt={n.title} />
-                ) : (
-                  <div className="news__img" aria-hidden="true">Imagen</div>
-                )}
-                <div className="news__body">
-                  <h3>{n.title}</h3>
-                  <p>{n.summary}</p>
-                  <time>{n.published_at ? formatDate(n.published_at) : n.dateLabel}</time>
-                </div>
-              </article>
-            ))}
-          </div>
+          <>
+            <article className="news news--lead">
+              <NewsImage n={lead} />
+              <div className="news__body">
+                <NewsMeta n={lead} />
+                <h3>{lead.title}</h3>
+                <p>{lead.summary}</p>
+              </div>
+            </article>
+            {rest.length > 0 && (
+              <div className="news__grid">
+                {rest.map((n) => (
+                  <article key={n.id} className="news">
+                    <NewsImage n={n} />
+                    <div className="news__body">
+                      <NewsMeta n={n} />
+                      <h3>{n.title}</h3>
+                      <p>{n.summary}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
-        <h2 className="title title--sub">Calendario de eventos</h2>
-        {events.length === 0 ? (
-          <Empty>No hay eventos próximos.</Empty>
-        ) : (
-          <ul className="events">
-            {events.map((e) => {
-              const d = parseDate(e.event_date)
-              return (
-                <li key={e.id} className="event">
-                  <div className="event__date">
-                    <strong>{d ? d.dia : e.dia}</strong>
-                    <span>{d ? d.mes : e.mes}</span>
-                  </div>
-                  <div>
-                    <h3>{e.title}</h3>
-                    <p>{e.detail}</p>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
+        <div className="agenda">
+          <Title sub>Calendario de eventos</Title>
+          {events.length === 0 ? (
+            <Empty>No hay eventos próximos.</Empty>
+          ) : (
+            <ol className="events">
+              {events.map((e) => {
+                const d = parseDate(e.event_date)
+                return (
+                  <li key={e.id} className="event">
+                    <div className="event__date">
+                      <strong>{d ? d.dia : e.dia}</strong>
+                      <span>{d ? d.mes : e.mes}</span>
+                    </div>
+                    <div>
+                      <h3>{e.title}</h3>
+                      <p>{e.detail}</p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          )}
+        </div>
       </div>
     </section>
   )
 }
+
+const statusKey = (s = '') =>
+  s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
 
 function Propuestas() {
   const { proposals } = useContent()
   return (
     <section id="propuestas" className="section">
       <div className="container">
-        <h2 className="title">Propuestas y proyectos</h2>
+        <Title>Propuestas y proyectos</Title>
         {proposals.length === 0 ? (
           <Empty>Pronto compartiremos nuestras propuestas.</Empty>
         ) : (
-          <div className="grid grid--3">
+          <div className="proposals">
             {proposals.map((p) => (
-              <article key={p.id} className="card">
-                <span className="tag">{p.status}</span>
+              <article key={p.id} className={`proposal proposal--${statusKey(p.status)}`}>
+                <span className="status">{p.status}</span>
                 <h3>{p.title}</h3>
                 <p>{p.text}</p>
               </article>
@@ -244,18 +310,18 @@ function Contacto() {
   }
 
   return (
-    <section id="contacto" className="section section--alt">
-      <div className="container grid grid--2 contact">
+    <section id="contacto" className="section section--dark">
+      <div className="container contact">
         <div>
-          <h2 className="title">Contáctanos</h2>
+          <Title>Contáctanos</Title>
           <p className="lead">
             ¿Tienes una idea, un reclamo o quieres participar? Escríbenos desde el buzón de sugerencias.
           </p>
-          <ul className="contact__list">
-            <li><strong>Correo:</strong> {settings.email}</li>
-            <li><strong>Instagram:</strong> {settings.instagram}</li>
-            <li><strong>Colegio:</strong> {SCHOOL.direccion}</li>
-          </ul>
+          <dl className="contact__list">
+            <div><dt>Correo</dt><dd>{settings.email}</dd></div>
+            <div><dt>Instagram</dt><dd>{settings.instagram}</dd></div>
+            <div><dt>Colegio</dt><dd>{SCHOOL.direccion}</dd></div>
+          </dl>
         </div>
 
         <form className="form" onSubmit={enviar}>
@@ -290,7 +356,7 @@ function Contacto() {
             name="web" value={form.web} onChange={set('web')}
           />
           <button className="btn" type="submit" disabled={status === 'sending'}>
-            {status === 'sending' ? 'ENVIANDO…' : 'ENVIAR'}
+            {status === 'sending' ? 'Enviando…' : 'Enviar mensaje'}
           </button>
         </form>
       </div>
@@ -303,10 +369,16 @@ function Footer() {
   return (
     <footer className="footer">
       <div className="container footer__inner">
-        <Img className="footer__logo" src={SCHOOL.escudo} alt={`Escudo ${SCHOOL.sigla}`} />
+        <div className="footer__brand">
+          <Img className="footer__logo" src={SCHOOL.escudo} alt={`Escudo ${SCHOOL.sigla}`} />
+          <div>
+            <h4>{CENTRO.nombre}</h4>
+            <p>{SCHOOL.nombre}</p>
+          </div>
+        </div>
         <div>
-          <h4>{CENTRO.nombre}</h4>
-          <p>{SCHOOL.nombre}</p>
+          <h4>Contáctanos</h4>
+          <p>{settings.email}</p>
           <p>{SCHOOL.direccion}</p>
         </div>
         <div>
@@ -315,11 +387,13 @@ function Footer() {
         </div>
       </div>
       <div className="footer__bottom">
-        Sitio del Centro de Alumnos · No es el sitio oficial del colegio ·{' '}
-        <a href={SCHOOL.sitio} target="_blank" rel="noreferrer">cph-cja.com</a>
-        {configured && <> · <Link to="/admin">Admin</Link></>}
-                <div>
-          <p>Raimundo Vicuña © 2026</p>
+        <div className="container footer__bottom-inner">
+          <span>
+            Sitio del Centro de Alumnos. No es el sitio oficial del colegio:{' '}
+            <a href={SCHOOL.sitio} target="_blank" rel="noreferrer">cph-cja.com</a>
+            {configured && <> · <Link to="/admin">Admin</Link></>}
+          </span>
+          <span>Raimundo Vicuña © 2026</span>
         </div>
       </div>
     </footer>
@@ -328,7 +402,7 @@ function Footer() {
 
 export default function Site() {
   return (
-    <>
+    <div className="site">
       <Header />
       <main>
         <Hero />
@@ -338,6 +412,6 @@ export default function Site() {
         <Contacto />
       </main>
       <Footer />
-    </>
+    </div>
   )
 }
