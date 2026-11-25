@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { SCHOOL, CENTRO, NAV, NOSOTROS } from './data'
 import { useContent, parseDate, formatDate } from './lib/content'
 import { supabase, configured } from './lib/supabase'
@@ -13,7 +13,7 @@ function Img({ src, className = '', alt }) {
 const LOGO_FALLBACK = '/logo.jpg'
 
 /* Cordillera: motivo del escudo. Se usa como marca de título y como imagen de relleno. */
-function Peak({ className = '' }) {
+export function Peak({ className = '' }) {
   return (
     <svg className={`peak ${className}`} viewBox="0 0 40 14" aria-hidden="true">
       <path d="M1 13 L12 3 L18 9 L27 1 L39 13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
@@ -30,7 +30,7 @@ function Title({ children, sub = false, id }) {
   )
 }
 
-function Ridge() {
+export function Ridge() {
   return (
     <svg className="ridge" viewBox="0 0 1440 220" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <path className="ridge__far" d="M0 150 L120 118 L210 138 L340 66 L430 110 L520 82 L640 132 L760 58 L850 98 L960 122 L1080 50 L1170 96 L1290 74 L1440 120 L1440 220 L0 220Z" />
@@ -41,9 +41,10 @@ function Ridge() {
   )
 }
 
-function Header() {
+export function Header() {
   const [open, setOpen] = useState(false)
   const { settings } = useContent()
+  const navigate = useNavigate()
   return (
     <header className="header">
       <div className="topbar">
@@ -75,7 +76,10 @@ function Header() {
               onClick={(e) => {
                 e.preventDefault()
                 setOpen(false)
-                document.getElementById(n.id)?.scrollIntoView({ behavior: 'smooth' })
+                const target = document.getElementById(n.id)
+                // Fuera de la portada (p. ej. en la 404) no existe la sección: volvemos al inicio y bajamos allí.
+                if (target) target.scrollIntoView({ behavior: 'smooth' })
+                else navigate('/', { state: { scrollTo: n.id } })
               }}
             >
               {n.label}
@@ -364,7 +368,7 @@ function Contacto() {
   )
 }
 
-function Footer() {
+export function Footer() {
   const { settings } = useContent()
   return (
     <footer className="footer">
@@ -401,6 +405,17 @@ function Footer() {
 }
 
 export default function Site() {
+  const { state } = useLocation()
+  const navigate = useNavigate()
+
+  // Si llegamos desde otra página (como la 404) pidiendo una sección, bajamos hasta ella.
+  useEffect(() => {
+    const id = state?.scrollTo
+    if (!id) return
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }))
+    navigate('/', { replace: true, state: null })
+  }, [state, navigate])
+
   return (
     <div className="site">
       <Header />
